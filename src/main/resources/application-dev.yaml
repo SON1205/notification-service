@@ -16,3 +16,7 @@ spring:
         format_sql: true
         show_sql: true
     open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
