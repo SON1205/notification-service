@@ -16,8 +16,3 @@ spring:
         format_sql: false
         show_sql: false
     open-in-view: false
-
-logging:
-  level:
-    root: WARN
-    com.jjino.notificationservice: INFO
