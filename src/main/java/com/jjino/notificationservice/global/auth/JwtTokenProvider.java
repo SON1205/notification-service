@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 public class JwtTokenProvider {
@@ -34,28 +35,27 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    /**
+     * Parse and validate token once. Returns empty if invalid.
+     */
+    public Optional<Claims> parseClaims(String token) {
         try {
-            parseToken(token);
-            return true;
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Optional.of(claims);
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return Optional.empty();
         }
     }
 
-    public Long getUserIdFromToken(String token) {
-        return Long.parseLong(parseToken(token).getSubject());
+    public Long getUserId(Claims claims) {
+        return Long.parseLong(claims.getSubject());
     }
 
-    public String getRoleFromToken(String token) {
-        return parseToken(token).get("role", String.class);
-    }
-
-    private Claims parseToken(String token) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public String getRole(Claims claims) {
+        return claims.get("role", String.class);
     }
 }

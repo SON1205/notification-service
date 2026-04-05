@@ -27,12 +27,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            UserPrincipal principal = new UserPrincipal(
-                    jwtTokenProvider.getUserIdFromToken(token),
-                    jwtTokenProvider.getRoleFromToken(token)
-            );
-            SecurityContextHolder.getContext().setAuthentication(principal);
+        if (token != null) {
+            jwtTokenProvider.parseClaims(token).ifPresent(claims -> {
+                UserPrincipal principal = new UserPrincipal(
+                        jwtTokenProvider.getUserId(claims),
+                        jwtTokenProvider.getRole(claims)
+                );
+                SecurityContextHolder.getContext().setAuthentication(principal);
+            });
         }
 
         filterChain.doFilter(request, response);
