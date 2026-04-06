@@ -22,7 +22,8 @@ public enum ErrorCode {
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found"),
 
     // User
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+    DUPLICATE_USERNAME(HttpStatus.CONFLICT, "Username already exists");
 
     private final HttpStatus status;
     private final String message;
