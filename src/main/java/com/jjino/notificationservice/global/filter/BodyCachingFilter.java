@@ -24,6 +24,7 @@ public class BodyCachingFilter extends OncePerRequestFilter {
 
     private static final int MAX_BODY_SIZE = Constants.MAX_BODY_LOG_SIZE;
 
+    // ContentCachingResponseWrapper가 SSE 스트림을 버퍼링하면 connect 이벤트만 보내고 연결이 끊김
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return request.getRequestURI().equals("/api/v1/notifications/stream");
