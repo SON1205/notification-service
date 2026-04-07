@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
 import java.util.List;
 
@@ -63,6 +64,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, getRequestId(), fieldErrors));
+    }
+
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    protected ResponseEntity<Void> handleAsyncTimeout(AsyncRequestTimeoutException e) {
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(Exception.class)

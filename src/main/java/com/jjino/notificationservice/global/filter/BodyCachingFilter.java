@@ -25,6 +25,11 @@ public class BodyCachingFilter extends OncePerRequestFilter {
     private static final int MAX_BODY_SIZE = Constants.MAX_BODY_LOG_SIZE;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().equals("/api/v1/notifications/stream");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper(request, MAX_BODY_SIZE);
