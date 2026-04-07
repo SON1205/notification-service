@@ -17,7 +17,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(loggingInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
-                        "/api/notifications/stream",
+                        "/api/v1/notifications/stream",
                         "/actuator/**"
                 );
     }
