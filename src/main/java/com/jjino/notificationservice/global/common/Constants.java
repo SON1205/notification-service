@@ -22,6 +22,9 @@ public final class Constants {
     // Request Attribute
     public static final String ATTR_START_TIME = "startTime";
 
+    // SSE
+    public static final String SSE_STREAM_PATH = "/api/v1/notifications/stream";
+
     // Logging
     public static final int MAX_BODY_LOG_SIZE = 10 * 1024;
     public static final long SLOW_REQUEST_THRESHOLD_MS = 3000;

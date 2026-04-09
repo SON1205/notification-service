@@ -1,5 +1,6 @@
 package com.jjino.notificationservice.global.config;
 
+import com.jjino.notificationservice.global.common.Constants;
 import com.jjino.notificationservice.global.interceptor.AbstractLoggingInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +18,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(loggingInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
-                        "/api/notifications/stream",
+                        Constants.SSE_STREAM_PATH,
                         "/actuator/**"
                 );
     }

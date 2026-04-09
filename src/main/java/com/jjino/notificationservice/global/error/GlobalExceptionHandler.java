@@ -1,8 +1,9 @@
 package com.jjino.notificationservice.global.error;
 
-import static com.jjino.notificationservice.global.common.Constants.*;
+import static com.jjino.notificationservice.global.common.Constants.MDC_REQUEST_ID;
+import static com.jjino.notificationservice.global.common.Constants.PROFILE_DEV;
 
-import com.jjino.notificationservice.global.common.Constants;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,8 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.List;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
 @Slf4j
 @RestControllerAdvice
@@ -65,6 +65,12 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, getRequestId(), fieldErrors));
     }
 
+    // sse timeout 되면 AsyncRequestTimeoutException 무시
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    protected ResponseEntity<Void> handleAsyncTimeout(AsyncRequestTimeoutException e) {
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
         logError("UnhandledException", ErrorCode.INTERNAL_SERVER_ERROR, e);
@@ -76,8 +82,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * dev: full stack trace
-     * prod: single line with root cause
+     * dev: full stack trace prod: single line with root cause
      */
     private void logError(String label, ErrorCode errorCode, Exception e) {
         if (isDev()) {
