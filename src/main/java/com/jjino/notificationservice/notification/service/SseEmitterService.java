@@ -20,9 +20,9 @@ public class SseEmitterService {
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT);
         emitters.put(userId, emitter);
 
-        emitter.onCompletion(() -> emitters.remove(userId));
-        emitter.onTimeout(() -> emitters.remove(userId));
-        emitter.onError(e -> emitters.remove(userId));
+        emitter.onCompletion(() -> emitters.remove(userId, emitter));
+        emitter.onTimeout(() -> emitters.remove(userId, emitter));
+        emitter.onError(e -> emitters.remove(userId, emitter));
 
         // 관례: 일부 브라우저/프록시는 첫 데이터가 없으면 연결을 끊어버리는 경우도 있어서, 더미 이벤트를 보내서 연결을 확정
         sendToEmitter(emitter, "connect", "connected");
