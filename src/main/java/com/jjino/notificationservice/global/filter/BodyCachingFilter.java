@@ -1,6 +1,8 @@
 package com.jjino.notificationservice.global.filter;
 
-import com.jjino.notificationservice.global.common.Constants;
+import static com.jjino.notificationservice.global.common.Constants.MAX_BODY_LOG_SIZE;
+import static com.jjino.notificationservice.global.common.Constants.SSE_STREAM_PATH;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,12 +24,12 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class BodyCachingFilter extends OncePerRequestFilter {
 
-    private static final int MAX_BODY_SIZE = Constants.MAX_BODY_LOG_SIZE;
+    private static final int MAX_BODY_SIZE = MAX_BODY_LOG_SIZE;
 
     // ContentCachingResponseWrapper가 SSE 스트림을 버퍼링하면 connect 이벤트만 보내고 연결이 끊김
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().equals("/api/v1/notifications/stream");
+        return request.getRequestURI().equals(SSE_STREAM_PATH);
     }
 
     @Override
