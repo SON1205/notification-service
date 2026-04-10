@@ -14,7 +14,7 @@ public final class CookieUtils {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .path("/")
+                .path("/api")
                 .maxAge(maxAgeSeconds)
                 .build();
     }
@@ -24,7 +24,7 @@ public final class CookieUtils {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
-                .path("/")
+                .path("/api")
                 .maxAge(0)
                 .build();
     }
