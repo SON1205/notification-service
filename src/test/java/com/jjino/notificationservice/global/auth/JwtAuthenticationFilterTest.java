@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import jakarta.servlet.http.Cookie;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.util.Base64;
@@ -63,14 +64,14 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("query parameter의 token도 인증에 사용된다")
-    void setsAuthenticationForTokenParam() throws Exception {
+    @DisplayName("Cookie의 access_token으로 인증에 사용된다")
+    void setsAuthenticationForCookieToken() throws Exception {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setParameter("token", "param-token");
+        request.setCookies(new Cookie("access_token", "cookie-token"));
 
         Claims claims = createClaims(1L, "USER");
-        given(jwtTokenProvider.parseClaims("param-token")).willReturn(Optional.of(claims));
+        given(jwtTokenProvider.parseClaims("cookie-token")).willReturn(Optional.of(claims));
         given(jwtTokenProvider.getUserId(claims)).willReturn(1L);
         given(jwtTokenProvider.getRole(claims)).willReturn("USER");
 
@@ -79,6 +80,7 @@ class JwtAuthenticationFilterTest {
 
         // then
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo(1L);
     }
 
     @Test
@@ -110,12 +112,12 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("header와 query param이 동시에 있으면 header가 우선한다")
-    void headerTakesPrecedenceOverQueryParam() throws Exception {
+    @DisplayName("header와 cookie가 동시에 있으면 header가 우선한다")
+    void headerTakesPrecedenceOverCookie() throws Exception {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer header-token");
-        request.setParameter("token", "param-token");
+        request.setCookies(new Cookie("access_token", "cookie-token"));
 
         Claims claims = createClaims(1L, "USER");
         given(jwtTokenProvider.parseClaims("header-token")).willReturn(Optional.of(claims));
@@ -127,7 +129,6 @@ class JwtAuthenticationFilterTest {
 
         // then
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
-        // header-token이 사용됨 (param-token의 parseClaims는 호출되지 않음)
         then(jwtTokenProvider).should().parseClaims("header-token");
         then(jwtTokenProvider).shouldHaveNoMoreInteractions();
     }

@@ -58,4 +58,8 @@ public class JwtTokenProvider {
     public String getRole(Claims claims) {
         return claims.get("role", String.class);
     }
+
+    public long getExpirationSeconds() {
+        return expiration / 1000;
+    }
 }

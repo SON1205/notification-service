@@ -39,4 +39,7 @@ public final class Constants {
             .toList();
 
     public static final String MASK_REPLACEMENT_FORMAT = "\"%s\":\"***\"";
+
+    // Cookie
+    public static final String COOKIE_ACCESS_TOKEN = "access_token";
 }
