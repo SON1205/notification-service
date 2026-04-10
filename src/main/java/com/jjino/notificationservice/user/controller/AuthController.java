@@ -50,4 +50,13 @@ public class AuthController {
                 .body(new LoginResponse(tokenInfo.token()));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        ResponseCookie cookie = CookieUtils.deleteAccessTokenCookie();
+
+        return ResponseEntity.ok()
+                .header(SET_COOKIE, cookie.toString())
+                .build();
+    }
+
 }
