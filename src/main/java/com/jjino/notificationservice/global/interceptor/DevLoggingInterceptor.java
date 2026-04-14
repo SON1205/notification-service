@@ -35,7 +35,7 @@ public class DevLoggingInterceptor extends AbstractLoggingInterceptor {
             byte[] body = wrapper.getContentAsByteArray();
             if (body.length > 0) {
                 String content = new String(body, UTF_8);
-                log.info(">>> Body: {}", maskSensitiveFields(truncate(content)));
+                log.info(">>> Body: {}", maskSensitiveFields(truncate(compactJson(content))));
             }
         }
     }
@@ -46,7 +46,7 @@ public class DevLoggingInterceptor extends AbstractLoggingInterceptor {
             byte[] body = wrapper.getContentAsByteArray();
             if (body.length > 0) {
                 String content = new String(body, UTF_8);
-                log.info("<<< Body: {}", maskSensitiveFields(truncate(content)));
+                log.info("<<< Body: {}", maskSensitiveFields(truncate(compactJson(content))));
             }
         }
     }

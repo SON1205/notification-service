@@ -22,24 +22,20 @@ public class ProdLoggingInterceptor extends AbstractLoggingInterceptor {
     private static final long SLOW_REQUEST_THRESHOLD_MS = Constants.SLOW_REQUEST_THRESHOLD_MS;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        log.info(formatRequestLog(request, handler));
-        return true;
-    }
-
-    @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         long duration = getDuration(request);
         int status = response.getStatus();
+        String method = request.getMethod();
         String uri = request.getRequestURI();
+        String clientIp = getClientIp(request);
 
         if (status >= 500) {
-            log.error("<<< {} {} {}ms", status, uri, duration);
+            log.error("<<< {} {} {} {}ms clientIp={}", status, method, uri, duration, clientIp);
         } else if (status >= 400) {
-            log.warn("<<< {} {} {}ms", status, uri, duration);
+            log.warn("<<< {} {} {} {}ms clientIp={}", status, method, uri, duration, clientIp);
         } else if (duration >= SLOW_REQUEST_THRESHOLD_MS) {
-            log.warn("<<< SLOW {} {} {}ms", status, uri, duration);
+            log.warn("<<< SLOW {} {} {} {}ms clientIp={}", status, method, uri, duration, clientIp);
         }
     }
 }

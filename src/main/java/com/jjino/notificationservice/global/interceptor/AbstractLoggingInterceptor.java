@@ -1,5 +1,7 @@
 package com.jjino.notificationservice.global.interceptor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjino.notificationservice.global.common.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
@@ -13,6 +15,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 public abstract class AbstractLoggingInterceptor implements HandlerInterceptor {
 
+    private static final ObjectMapper COMPACT_MAPPER = new ObjectMapper();
     protected static final int MAX_BODY_LOG_SIZE = Constants.MAX_BODY_LOG_SIZE;
 
     protected String formatRequestLog(HttpServletRequest request, Object handler) {
@@ -66,6 +69,15 @@ public abstract class AbstractLoggingInterceptor implements HandlerInterceptor {
             masked = Constants.SENSITIVE_PATTERNS.get(i).matcher(masked).replaceAll(replacement);
         }
         return masked;
+    }
+
+    protected String compactJson(String content) {
+        try {
+            Object json = COMPACT_MAPPER.readValue(content, Object.class);
+            return COMPACT_MAPPER.writeValueAsString(json);
+        } catch (JsonProcessingException e) {
+            return content;
+        }
     }
 
     protected String truncate(String content) {
