@@ -1,6 +1,7 @@
 package com.jjino.notificationservice.notification.service;
 
 import com.jjino.notificationservice.notification.service.dto.NotificationInfo;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +35,13 @@ public class SseEmitterService {
     // 프론트에서 SharedWorker/BroadcastChannel로 탭 간 SSE 공유 필요.
     // Phase 3 스케일아웃 시 Redis Pub/Sub 등으로 교체 예정이므로 현 단계에서는 1:1 유지.
     private final ConcurrentHashMap<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final SseMetrics metrics;
+
+    public SseEmitterService(SseMetrics metrics, MeterRegistry registry) {
+        this.metrics = metrics;
+        // Gauge 등록: 상태(emitters map) 소유는 이 클래스, 관측 등록은 SseMetrics가 담당
+        metrics.bindActiveConnections(registry, emitters);
+    }
 
     // https://ko.htmlspecs.com/#the-messageevent-interface
     // SSE 스펙 핵심 계약: 재연결 시 Last-Event-ID 이후의 밀린 알림을 전송하여 유실 방지.
@@ -46,15 +54,22 @@ public class SseEmitterService {
 
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT);
         emitters.put(userId, emitter);
+        metrics.recordSubscribe();
 
         emitter.onCompletion(() -> emitters.remove(userId, emitter));
-        emitter.onTimeout(() -> emitters.remove(userId, emitter));
+        emitter.onTimeout(() -> {
+            emitters.remove(userId, emitter);
+            metrics.recordTimeout();
+        });
         emitter.onError(e -> emitters.remove(userId, emitter));
 
         // 관례: 일부 브라우저/프록시는 첫 데이터가 없으면 연결을 끊어버리는 경우도 있어서, 더미 이벤트를 보내서 연결을 확정
         sendToEmitter(emitter, "connect", "connected", null);
 
         // 재연결인 경우, 밀린 알림을 순서대로 전송
+        if (!missedNotifications.isEmpty()) {
+            metrics.recordReconnect();
+        }
         for (NotificationInfo notification : missedNotifications) {
             sendToEmitter(emitter, "notification", notification, String.valueOf(notification.id()));
         }
@@ -83,8 +98,10 @@ public class SseEmitterService {
             }
 
             emitter.send(event);
+            metrics.recordSendSuccess();
         } catch (IOException e) {
             log.warn("SSE send failed: {}", e.getMessage());
+            metrics.recordSendFail();
             completeQuietly(emitter);
         }
     }
