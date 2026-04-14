@@ -177,7 +177,7 @@ class NotificationControllerTest {
         @WithMockUser
         void returnsSseStreamWithCorrectContentType() throws Exception {
             // given
-            given(sseEmitterService.subscribe(any())).willReturn(new SseEmitter());
+            given(sseEmitterService.subscribe(any(), any())).willReturn(new SseEmitter());
 
             // when & then
             mockMvc.perform(get("/api/v1/notifications/stream")
@@ -192,10 +192,10 @@ class NotificationControllerTest {
     class Unauthorized {
 
         @Test
-        @DisplayName("인증 없이 접근하면 403을 반환한다")
-        void returnsForbiddenWithoutAuth() throws Exception {
+        @DisplayName("인증 없이 접근하면 401을 반환한다")
+        void returnsUnauthorizedWithoutAuth() throws Exception {
             mockMvc.perform(get("/api/v1/notifications"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }
