@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // SSE 연결이 타임아웃/완료되면 Tomcat이 async dispatch
                         // 이때 요청이 다시 필터 체인을 타는데, JWT 토큰이 없는 상태라 Spring Security가 Access Denied 던짐
                         .dispatcherTypeMatchers(ASYNC).permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
