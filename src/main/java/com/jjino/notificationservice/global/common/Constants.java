@@ -40,6 +40,7 @@ public final class Constants {
 
     public static final String MASK_REPLACEMENT_FORMAT = "\"%s\":\"***\"";
 
-    // Cookie
+    // Auth
+    public static final String ATTR_AUTH_ERROR = "authError";
     public static final String COOKIE_ACCESS_TOKEN = "access_token";
 }

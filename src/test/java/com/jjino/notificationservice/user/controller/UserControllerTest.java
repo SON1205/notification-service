@@ -40,9 +40,9 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("인증 없이 탈퇴 요청 시 403을 반환한다")
-    void returns403WithoutAuth() throws Exception {
+    @DisplayName("인증 없이 탈퇴 요청 시 401을 반환한다")
+    void returns401WithoutAuth() throws Exception {
         mockMvc.perform(delete("/api/v1/users/me"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }

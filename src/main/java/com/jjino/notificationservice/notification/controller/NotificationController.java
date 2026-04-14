@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -31,17 +32,24 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final SseEmitterService sseEmitterService;
 
-    // sse 구독
+    // SSE는 chunked transfer encoding으로 동작: 전체 응답 크기는 모르지만 이벤트마다 chunk 단위로 즉시 전송.
+    // Nginx 리버스 프록시 사용 시 proxy_buffering off 또는 X-Accel-Buffering: no 설정 필요.
     @GetMapping(value = "/stream", produces = TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@CurrentUserId Long userId) {
-        return sseEmitterService.subscribe(userId);
+    public SseEmitter subscribe(
+            @CurrentUserId Long userId,
+            @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId) {
+        List<NotificationInfo> missed = notificationService.getMissedAfter(userId, lastEventId);
+        return sseEmitterService.subscribe(userId, missed);
     }
 
+    // TODO Phase 2 이후: 권한 체크 추가 (현재는 인증된 아무 유저가 아무에게 알림 전송 가능)
+    // Phase 1에서는 부하 테스트 편의를 위해 의도적으로 권한 체크 생략.
     @PostMapping
     public ResponseEntity<NotificationResponse> send(@Valid @RequestBody CreateNotificationRequest request) {
         NotificationInfo info = notificationService.send(
                 new CreateNotificationCommand(request.userId(), request.type(), request.title(), request.content()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(NotificationResponse.from(info));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(NotificationResponse.from(info));
     }
 
     @GetMapping

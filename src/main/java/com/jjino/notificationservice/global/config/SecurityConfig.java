@@ -3,6 +3,7 @@ package com.jjino.notificationservice.global.config;
 import static jakarta.servlet.DispatcherType.ASYNC;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import com.jjino.notificationservice.global.auth.CustomAuthenticationEntryPoint;
 import com.jjino.notificationservice.global.auth.JwtAuthenticationFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
@@ -41,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
