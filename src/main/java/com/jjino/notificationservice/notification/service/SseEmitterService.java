@@ -11,24 +11,19 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * SSE Emitter 관리 서비스.
- *
+ * <p>
  * [동시성 시나리오 및 대응 — Phase 1]
- *
- * 1. subscribe~send 갭 (알림 유실)
- *    - remove() → put() 사이에 send()가 들어오면 emitter가 없어 알림 전송 실패.
- *    - 대응: DB에 저장은 완료된 상태이므로, Last-Event-ID 재연결 시 복구됨.
- *
- * 2. send 중 타임아웃 (complete 중복 호출)
- *    - get()으로 emitter를 꺼낸 뒤 send() 전에 Tomcat이 타임아웃 처리.
- *    - 이미 완료된 emitter에 complete()를 다시 호출하면 IllegalStateException.
- *    - 대응: completeQuietly()로 중복 complete 방어.
- *
- * 3. 동시 재구독 경합 (알림 유실)
- *    - 같은 userId로 subscribe()가 동시 호출되면 remove~put 사이 윈도우에서 유실 가능.
- *    - 대응: 시나리오 1과 동일하게 Last-Event-ID로 복구. Phase 3에서 구조적 해소.
- *
- * 근본 원인: ConcurrentHashMap은 개별 연산은 thread-safe하지만 복합 연산(remove→put)은 원자적이지 않음.
- * Phase 3 Redis Pub/Sub 전환 시 구조적으로 해소 예정.
+ * <p>
+ * 1. subscribe~send 갭 (알림 유실) - remove() → put() 사이에 send()가 들어오면 emitter가 없어 알림 전송 실패. - 대응: DB에 저장은 완료된 상태이므로,
+ * Last-Event-ID 재연결 시 복구됨.
+ * <p>
+ * 2. send 중 타임아웃 (complete 중복 호출) - get()으로 emitter를 꺼낸 뒤 send() 전에 Tomcat이 타임아웃 처리. - 이미 완료된 emitter에 complete()를 다시
+ * 호출하면 IllegalStateException. - 대응: completeQuietly()로 중복 complete 방어.
+ * <p>
+ * 3. 동시 재구독 경합 (알림 유실) - 같은 userId로 subscribe()가 동시 호출되면 remove~put 사이 윈도우에서 유실 가능. - 대응: 시나리오 1과 동일하게 Last-Event-ID로
+ * 복구. Phase 3에서 구조적 해소.
+ * <p>
+ * 근본 원인: ConcurrentHashMap은 개별 연산은 thread-safe하지만 복합 연산(remove→put)은 원자적이지 않음. Phase 3 Redis Pub/Sub 전환 시 구조적으로 해소 예정.
  */
 @Slf4j
 @Service
@@ -86,6 +81,7 @@ public class SseEmitterService {
             if (id != null) {
                 event.id(id);
             }
+
             emitter.send(event);
         } catch (IOException e) {
             log.warn("SSE 전송 실패: {}", e.getMessage());
