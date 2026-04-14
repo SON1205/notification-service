@@ -25,6 +25,9 @@ public class Notification extends BaseTimeEntity {
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
+    // FK가 아닌 일반 Long. 알림 서비스는 User 엔티티에 의존하지 않는다.
+    // 서비스 분리(MSA) 시 깨지지 않도록 의도적으로 연관관계를 맺지 않음.
+    // userId 유효성 검증이 필요하면 서비스 레이어에서 처리.
     @Column(nullable = false)
     private Long userId;
 
@@ -32,14 +35,14 @@ public class Notification extends BaseTimeEntity {
     @Column(nullable = false)
     private NotificationType type;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String content;
 
-    @Column(nullable = false)
-    private boolean isRead;
+    @Column(name = "is_read", nullable = false)
+    private boolean read;
 
     @Builder
     public Notification(Long userId, NotificationType type, String title, String content) {
@@ -47,10 +50,10 @@ public class Notification extends BaseTimeEntity {
         this.type = type;
         this.title = title;
         this.content = content;
-        this.isRead = false;
+        this.read = false;
     }
 
     public void markAsRead() {
-        this.isRead = true;
+        this.read = true;
     }
 }

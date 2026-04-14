@@ -51,7 +51,7 @@ class NotificationRepositoryTest {
     void findUnreadByUserIdOrderByCreatedAtDesc() {
         // when
         List<Notification> result = notificationRepository
-                .findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+                .findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
 
         // then
         assertThat(result).hasSize(2);
@@ -76,7 +76,7 @@ class NotificationRepositoryTest {
     void doesNotIncludeOtherUserNotifications() {
         // when
         List<Notification> result = notificationRepository
-                .findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+                .findByUserIdAndReadFalseOrderByCreatedAtDesc(userId);
 
         // then
         assertThat(result).noneMatch(n -> n.getUserId().equals(otherUserId));
@@ -87,7 +87,7 @@ class NotificationRepositoryTest {
     void returnsEmptyListForUserWithNoNotifications() {
         // when
         List<Notification> result = notificationRepository
-                .findByUserIdAndIsReadFalseOrderByCreatedAtDesc(999L);
+                .findByUserIdAndReadFalseOrderByCreatedAtDesc(999L);
 
         // then
         assertThat(result).isEmpty();
