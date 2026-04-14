@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: SSE 기반 실시간 알림 서비스
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+
+tags:
+  - name: Auth
+    description: 회원가입, 로그인, 로그아웃
+  - name: User
+    description: 사용자 관리
+  - name: Notification
+    description: 알림 CRUD + SSE 스트림
+
+security:
+  - BearerAuth: [ ]
+  - CookieAuth: [ ]
+
+paths:
+  /api/v1/auth/signup:
+    post:
+      tags: [ Auth ]
+      summary: 회원가입
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: 중복 username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: DUPLICATE_USERNAME
+                message: Username already exists
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+
+  /api/v1/auth/login:
+    post:
+      tags: [ Auth ]
+      summary: 로그인
+      description: JWT 토큰을 응답 body + HttpOnly Cookie 두 곳에 반환
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          headers:
+            Set-Cookie:
+              description: 'access_token={jwt}; HttpOnly; Path=/; Max-Age={seconds}'
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_CREDENTIALS
+                message: Invalid username or password
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [ Auth ]
+      summary: 로그아웃
+      description: HttpOnly Cookie 삭제
+      security: [ ]
+      responses:
+        '200':
+          description: 로그아웃 성공
+
+  /api/v1/users/me:
+    delete:
+      tags: [ User ]
+      summary: 회원 탈퇴
+      responses:
+        '204':
+          description: 탈퇴 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 사용자 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: USER_NOT_FOUND
+                message: User not found
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+
+  /api/v1/notifications/stream:
+    get:
+      tags: [ Notification ]
+      summary: SSE 스트림 구독
+      description: |
+        Server-Sent Events 연결. 알림 발생 시 실시간으로 수신.
+        - 브라우저 EventSource가 재연결 시 Last-Event-ID 헤더를 자동 전송
+        - 서버는 해당 ID 이후의 밀린 알림을 재전송
+        - chunked transfer encoding으로 동작
+      parameters:
+        - name: Last-Event-ID
+          in: header
+          required: false
+          description: 마지막으로 수신한 이벤트 ID (재연결 시 브라우저가 자동 전송)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSE 스트림 연결 성공
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  이벤트 형식:
+                  - connect: 연결 확인 더미 이벤트
+                  - notification: 알림 데이터 (NotificationResponse JSON)
+
+                  각 이벤트에 id 필드 포함 (notification PK)
+              example: |
+                event: connect
+                data: connected
+
+                id: 42
+                event: notification
+                data: {"id":42,"type":"SYSTEM","title":"제목","content":"내용","isRead":false,"createdAt":"2026-04-14T12:00:00"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/notifications:
+    post:
+      tags: [ Notification ]
+      summary: 알림 전송
+      description: 지정한 유저에게 알림 전송. Phase 1에서는 권한 체크 없음.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationRequest'
+      responses:
+        '201':
+          description: 알림 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      tags: [ Notification ]
+      summary: 전체 알림 목록 조회
+      responses:
+        '200':
+          description: 전체 알림 목록
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/notifications/unread:
+    get:
+      tags: [ Notification ]
+      summary: 안 읽은 알림 목록 조회
+      responses:
+        '200':
+          description: 안 읽은 알림 목록
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/notifications/{id}/read:
+    patch:
+      tags: [ Notification ]
+      summary: 알림 읽음 처리
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 읽음 처리 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 알림 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: NOTIFICATION_NOT_FOUND
+                message: Notification not found
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+
+  schemas:
+    SignupRequest:
+      type: object
+      required: [ username, password ]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          example: jjino
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          format: password
+          example: password123
+
+    SignupResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        username:
+          type: string
+          example: jjino
+
+    LoginRequest:
+      type: object
+      required: [ username, password ]
+      properties:
+        username:
+          type: string
+          example: jjino
+        password:
+          type: string
+          format: password
+          example: password123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiJ9...
+
+    CreateNotificationRequest:
+      type: object
+      required: [ userId, type, title, content ]
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+          maxLength: 100
+          example: 새 댓글
+        content:
+          type: string
+          maxLength: 500
+          example: 게시글에 새 댓글이 달렸습니다.
+
+    NotificationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+          example: 새 댓글
+        content:
+          type: string
+          example: 게시글에 새 댓글이 달렸습니다.
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-14T12:00:00'
+
+    NotificationType:
+      type: string
+      enum: [ SYSTEM ]
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: ErrorCode enum name
+          example: INVALID_INPUT
+        message:
+          type: string
+          example: Invalid input value
+        requestId:
+          type: string
+          description: MDC request ID
+          example: abc-123
+        timestamp:
+          type: string
+          format: date-time
+        fieldErrors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+        debugMessage:
+          type: string
+          nullable: true
+          description: dev 프로필에서만 포함
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+          example: title
+        reason:
+          type: string
+          example: title is required
+
+  responses:
+    Unauthorized:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            토큰 없음:
+              value:
+                code: UNAUTHORIZED
+                message: Authentication is required
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+            토큰 만료:
+              value:
+                code: EXPIRED_TOKEN
+                message: Token has expired
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+            토큰 변조:
+              value:
+                code: INVALID_TOKEN
+                message: Invalid token
+                requestId: abc-123
+                timestamp: '2026-04-14T12:00:00'
+
+    ValidationError:
+      description: 입력값 검증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: INVALID_INPUT
+            message: Invalid input value
+            requestId: abc-123
+            timestamp: '2026-04-14T12:00:00'
+            fieldErrors:
+              - field: title
+                reason: title is required
