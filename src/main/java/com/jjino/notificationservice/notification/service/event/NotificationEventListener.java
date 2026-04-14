@@ -13,6 +13,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * - DB 커넥션을 점유하지 않음 (트랜잭션 이미 종료)
  * - SSE 전송 실패가 트랜잭션 롤백을 유발하지 않음
  * - 추후 전송 채널 추가(WebSocket, FCM 등) 시 리스너만 확장하면 됨
+ *
+ * 현재 같은 스레드에서 실행되므로 SSE 전송 시간이 API 응답에 포함됨.
+ * Phase 2 부하 테스트 후 병목 확인 시 @Async 도입 검토.
  */
 @Component
 @RequiredArgsConstructor
