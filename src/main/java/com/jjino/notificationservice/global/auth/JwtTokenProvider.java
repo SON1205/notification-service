@@ -36,16 +36,26 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Parse and validate token once. Returns empty if invalid.
+     * 토큰을 파싱하고 검증한다. 실패 시 예외를 그대로 던진다.
+     * - ExpiredJwtException: 토큰 만료
+     * - JwtException: 변조, 형식 오류 등
+     * JwtAuthenticationFilter에서 예외 종류별로 request attribute에 원인을 저장하는 데 사용.
+     */
+    public Optional<Claims> parseClaimsOrThrow(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return Optional.of(claims);
+    }
+
+    /**
+     * 토큰을 파싱하고 검증한다. 실패 시 empty 반환.
      */
     public Optional<Claims> parseClaims(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            return Optional.of(claims);
+            return parseClaimsOrThrow(token);
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }

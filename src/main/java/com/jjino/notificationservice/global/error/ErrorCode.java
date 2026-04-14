@@ -17,6 +17,7 @@ public enum ErrorCode {
     // Auth
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid username or password"),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid token"),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "Token has expired"),
 
     // Notification
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "Notification not found"),

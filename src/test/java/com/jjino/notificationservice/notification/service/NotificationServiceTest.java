@@ -159,7 +159,7 @@ class NotificationServiceTest {
                     createNotification(1L, userId, false),
                     createNotification(2L, userId, false)
             );
-            given(notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId))
+            given(notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId))
                     .willReturn(unread);
 
             // when
@@ -175,7 +175,7 @@ class NotificationServiceTest {
         void returnsEmptyListWhenNoUnread() {
             // given
             Long userId = 1L;
-            given(notificationRepository.findByUserIdAndIsReadFalseOrderByCreatedAtDesc(userId))
+            given(notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(userId))
                     .willReturn(List.of());
 
             // when
