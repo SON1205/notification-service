@@ -84,7 +84,7 @@ public class SseEmitterService {
 
             emitter.send(event);
         } catch (IOException e) {
-            log.warn("SSE 전송 실패: {}", e.getMessage());
+            log.warn("SSE send failed: {}", e.getMessage());
             completeQuietly(emitter);
         }
     }

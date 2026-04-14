@@ -82,7 +82,7 @@ public class NotificationService {
                     .map(NotificationInfo::from)
                     .toList();
         } catch (NumberFormatException e) {
-            log.warn("유효하지 않은 Last-Event-ID: {}", lastEventId);
+            log.warn("Invalid Last-Event-ID: {}", lastEventId);
             return Collections.emptyList();
         }
     }
