@@ -38,7 +38,6 @@ public class NotificationController {
     public SseEmitter subscribe(
             @CurrentUserId Long userId,
             @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId) {
-
         List<NotificationInfo> missed = notificationService.getMissedAfter(userId, lastEventId);
         return sseEmitterService.subscribe(userId, missed);
     }
@@ -49,7 +48,8 @@ public class NotificationController {
     public ResponseEntity<NotificationResponse> send(@Valid @RequestBody CreateNotificationRequest request) {
         NotificationInfo info = notificationService.send(
                 new CreateNotificationCommand(request.userId(), request.type(), request.title(), request.content()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(NotificationResponse.from(info));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(NotificationResponse.from(info));
     }
 
     @GetMapping
