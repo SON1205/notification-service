@@ -1,0 +1,15 @@
+.git
+.idea
+.gradle
+build
+
+.env
+.env.example
+.dockerignore
+.gitignore
+
+docker-compose*.yaml
+Dockerfile
+
+monitoring
+*.md

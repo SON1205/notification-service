@@ -1,0 +1,11 @@
+# Prometheus scrape 설정
+# Spring Boot Actuator의 /actuator/prometheus 엔드포인트를 주기적으로 긁어감
+global:
+  scrape_interval: 10s     # 10초마다 메트릭 수집
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['app-server:8080']
