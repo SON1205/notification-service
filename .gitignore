@@ -242,3 +242,6 @@ gradle-app.setting
 
 ## Claude
 CLAUDE.md
+
+## k6 custom binary (xk6-sse build output)
+load-test/k6/k6
