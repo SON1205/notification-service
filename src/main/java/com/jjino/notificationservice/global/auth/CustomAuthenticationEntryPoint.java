@@ -10,12 +10,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.slf4j.MDC;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * 인증 실패 시 응답을 생성하는 EntryPoint.
@@ -30,11 +30,11 @@ import tools.jackson.databind.json.JsonMapper;
  * GlobalExceptionHandler와 동일한 ErrorResponse 형식으로 원인별 401 응답을 줄 수 있다.
  */
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = JsonMapper.builder()
-            .findAndAddModules()
-            .build();
+    // Spring Boot가 구성한 ObjectMapper를 주입받아 API 응답과 동일한 JSON 직렬화 설정 보장
+    private final ObjectMapper objectMapper;
 
     @Override
     public void commence(HttpServletRequest request,
