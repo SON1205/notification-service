@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jjino.notificationservice.notification.domain.NotificationType;
 import com.jjino.notificationservice.notification.service.dto.NotificationInfo;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -20,7 +21,9 @@ class SseEmitterServiceTest {
 
     @BeforeEach
     void setUp() {
-        sseEmitterService = new SseEmitterService();
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        SseMetrics metrics = new SseMetrics(registry);
+        sseEmitterService = new SseEmitterService(metrics, registry);
     }
 
     private static NotificationInfo testNotification(Long id) {
