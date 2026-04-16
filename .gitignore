@@ -245,3 +245,6 @@ CLAUDE.md
 
 ## k6 custom binary (xk6-sse build output)
 load-test/k6/k6
+
+## Node.js dependencies (verification client)
+node_modules/
