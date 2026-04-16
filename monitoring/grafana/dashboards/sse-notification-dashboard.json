@@ -40,12 +40,14 @@
       ]
     },
     {
-      "title": "HTTP Request Duration (p95)",
+      "title": "HTTP Request Duration",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "targets": [
-        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (le, uri))", "legendFormat": "{{uri}} p95" }
-      ]
+        { "expr": "http_server_requests_seconds_max", "legendFormat": "max {{uri}}" },
+        { "expr": "rate(http_server_requests_seconds_sum[1m]) / rate(http_server_requests_seconds_count[1m])", "legendFormat": "avg {{uri}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
       "title": "HTTP Request Rate (/s)",
@@ -56,13 +58,14 @@
       ]
     },
     {
-      "title": "Tomcat Threads",
+      "title": "Executor Threads (Tomcat)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "targets": [
-        { "expr": "tomcat_threads_current_threads", "legendFormat": "current" },
-        { "expr": "tomcat_threads_busy_threads", "legendFormat": "busy" },
-        { "expr": "tomcat_threads_config_max_threads", "legendFormat": "max" }
+        { "expr": "executor_pool_size_threads", "legendFormat": "pool size" },
+        { "expr": "executor_active_threads", "legendFormat": "active" },
+        { "expr": "executor_pool_max_threads", "legendFormat": "max" },
+        { "expr": "executor_pool_core_threads", "legendFormat": "core" }
       ]
     },
     {
@@ -87,13 +90,13 @@
       "fieldConfig": { "defaults": { "unit": "bytes" } }
     },
     {
-      "title": "JVM GC Pause Duration",
+      "title": "JVM GC Pause",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
       "targets": [
-        { "expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "{{cause}} {{action}}" }
-      ],
-      "fieldConfig": { "defaults": { "unit": "s" } }
+        { "expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "pause time/s" },
+        { "expr": "rate(jvm_gc_pause_seconds_count[1m])", "legendFormat": "pause count/s" }
+      ]
     },
     {
       "title": "Process Open File Descriptors",
