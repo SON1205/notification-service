@@ -105,7 +105,9 @@ SSE 연결 없이 POST /notifications의 처리량을 목표 TPS로 제어하며
 
 ## 기능 검증 실행 (S4)
 
-Last-Event-ID 기반 재연결 복구가 정상 동작하는지 검증.
+**Last-Event-ID 수동 재연결 복구 검증.**
+Last-Event-ID 헤더를 클라이언트가 직접 넣어 재연결했을 때 서버가 오프라인 구간 알림을 순서대로 복구하는지만 검증한다.
+브라우저 EventSource의 자동 재연결 동작(라이브러리가 끊김을 감지해 재시도하고 Last-Event-ID를 자동 주입하는 흐름)은 범위 밖이다.
 
 ```bash
 cd load-test/verification
@@ -126,15 +128,17 @@ npm run verify
 
 | 섹션 | 용도 |
 |------|------|
-| **테스트 판정 (SSE)** | 활성 연결 수, Send rate, Subscribe/Timeout/Reconnect |
-| **테스트 판정 (HTTP)** | HTTP Request Rate/Duration (엔드포인트/상태별) |
+| **테스트 판정 (SSE)** | 활성 연결 수, Send 성공/실패 rate, Subscribe/Timeout/Reconnect rate |
+| **테스트 판정 (HTTP)** | HTTP Request Rate (엔드포인트/상태별), HTTP Duration (현재는 max와 전체 평균만 표시, URI별 p95 분리는 히스토그램 bucket 도입 이후 가능) |
 | **서버 리소스 (원인 분석)** | Executor Threads, HikariCP, JVM Heap/GC, FD, CPU |
 
 ### 해석 흐름
 
-1. **판정 섹션**에서 테스트 임계값 통과 여부 확인
+1. **판정 섹션**에서 서버 측 메트릭으로 테스트 임계값 통과 여부를 대략 확인
 2. **이상 지점이 있으면 같은 시간축으로 하단 리소스 섹션** 확인 (무엇이 먼저 한계에 닿았는가)
-3. k6 터미널 출력의 custom 메트릭과 Grafana 그래프를 교차 검증
+3. **k6 터미널 출력(커스텀 메트릭: sse_connect_success, sse_e2e_latency_ms 등)**과 **Grafana(서버 메트릭: sse_connections_active, http_server_requests_* 등)**를 나란히 해석
+   - 현재 Prometheus는 앱 서버만 scrape한다. k6 커스텀 메트릭은 Grafana에 들어오지 않으므로 동일 지표의 양쪽 교차 검증은 불가
+   - k6 메트릭을 Grafana에서 함께 보려면 Prometheus remote_write 또는 InfluxDB 등 별도 출력 백엔드 연동이 필요하다
 
 ## 로컬 vs AWS
 
