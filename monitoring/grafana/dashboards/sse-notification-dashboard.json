@@ -6,43 +6,56 @@
   "time": { "from": "now-30m", "to": "now" },
   "panels": [
     {
+      "title": "━ 테스트 판정 (SSE) ━",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
       "title": "SSE Active Connections",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
       "targets": [
         { "expr": "sse_connections_active", "legendFormat": "active" }
       ]
     },
     {
-      "title": "SSE Subscribe Rate (/s)",
+      "title": "SSE Send Rate (success vs fail)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "targets": [
-        { "expr": "rate(sse_subscribe_total[1m])", "legendFormat": "subscribe/s" }
-      ]
-    },
-    {
-      "title": "SSE Send Rate (/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
       "targets": [
         { "expr": "rate(sse_send_total{result=\"success\"}[1m])", "legendFormat": "success/s" },
         { "expr": "rate(sse_send_total{result=\"fail\"}[1m])", "legendFormat": "fail/s" }
       ]
     },
     {
-      "title": "SSE Timeout & Reconnect Rate (/s)",
+      "title": "SSE Subscribe / Timeout / Reconnect",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
       "targets": [
+        { "expr": "rate(sse_subscribe_total[1m])", "legendFormat": "subscribe/s" },
         { "expr": "rate(sse_timeout_total[1m])", "legendFormat": "timeout/s" },
         { "expr": "rate(sse_reconnect_total[1m])", "legendFormat": "reconnect/s" }
       ]
     },
     {
-      "title": "HTTP Request Duration",
+      "title": "━ 테스트 판정 (HTTP) ━",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "collapsed": false
+    },
+    {
+      "title": "HTTP Request Rate (by URI, status)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri, status)", "legendFormat": "{{uri}} {{status}}" }
+      ]
+    },
+    {
+      "title": "HTTP Request Duration (max, avg)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
       "targets": [
         { "expr": "http_server_requests_seconds_max", "legendFormat": "max {{uri}}" },
         { "expr": "rate(http_server_requests_seconds_sum[1m]) / rate(http_server_requests_seconds_count[1m])", "legendFormat": "avg {{uri}}" }
@@ -50,17 +63,15 @@
       "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
-      "title": "HTTP Request Rate (/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "targets": [
-        { "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri, status)", "legendFormat": "{{uri}} {{status}}" }
-      ]
+      "title": "━ 서버 리소스 (원인 분석) ━",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "collapsed": false
     },
     {
       "title": "Executor Threads (Tomcat)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
       "targets": [
         { "expr": "executor_pool_size_threads", "legendFormat": "pool size" },
         { "expr": "executor_active_threads", "legendFormat": "active" },
@@ -71,7 +82,7 @@
     {
       "title": "HikariCP Connections",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
       "targets": [
         { "expr": "hikaricp_connections_active", "legendFormat": "active" },
         { "expr": "hikaricp_connections_idle", "legendFormat": "idle" },
@@ -82,7 +93,7 @@
     {
       "title": "JVM Heap Memory",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
       "targets": [
         { "expr": "jvm_memory_used_bytes{area=\"heap\"}", "legendFormat": "used {{id}}" },
         { "expr": "jvm_memory_committed_bytes{area=\"heap\"}", "legendFormat": "committed {{id}}" }
@@ -92,7 +103,7 @@
     {
       "title": "JVM GC Pause",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
       "targets": [
         { "expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "pause time/s" },
         { "expr": "rate(jvm_gc_pause_seconds_count[1m])", "legendFormat": "pause count/s" }
@@ -101,7 +112,7 @@
     {
       "title": "Process Open File Descriptors",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 35 },
       "targets": [
         { "expr": "process_files_open_files", "legendFormat": "open" },
         { "expr": "process_files_max_files", "legendFormat": "max" }
@@ -110,7 +121,7 @@
     {
       "title": "CPU Usage",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 35 },
       "targets": [
         { "expr": "process_cpu_usage", "legendFormat": "process" },
         { "expr": "system_cpu_usage", "legendFormat": "system" }
