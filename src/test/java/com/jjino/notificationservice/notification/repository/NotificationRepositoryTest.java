@@ -83,6 +83,34 @@ class NotificationRepositoryTest {
     }
 
     @Test
+    @DisplayName("특정 ID 이후 알림을 최신순으로 조회한다")
+    void findByUserIdAndIdGreaterThanOrderByCreatedAtDesc() {
+        // given
+        List<Notification> all = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        Long firstId = all.getLast().getId();
+
+        // when
+        List<Notification> result = notificationRepository
+                .findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, firstId);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).allMatch(n -> n.getId() > firstId);
+        assertThat(result).allMatch(n -> n.getUserId().equals(userId));
+    }
+
+    @Test
+    @DisplayName("특정 ID 이후 알림이 없으면 빈 리스트를 반환한다")
+    void returnsEmptyListWhenNoNotificationsAfterGivenId() {
+        // when
+        List<Notification> result = notificationRepository
+                .findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, Long.MAX_VALUE);
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     @DisplayName("알림이 없는 유저의 조회는 빈 리스트를 반환한다")
     void returnsEmptyListForUserWithNoNotifications() {
         // when
