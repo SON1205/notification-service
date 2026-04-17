@@ -1,0 +1,12 @@
+{
+  "name": "sse-verification",
+  "version": "1.0.0",
+  "description": "SSE 재연결/순서/유실 검증 클라이언트",
+  "type": "module",
+  "scripts": {
+    "verify": "node sse-client.js"
+  },
+  "dependencies": {
+    "eventsource": "^2.0.2"
+  }
+}
