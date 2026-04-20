@@ -20,8 +20,8 @@ export const DEFAULT_THRESHOLDS = {
 // SSE timeout(60s) 이내에 발행이 끝나도록 설계
 export const E2E_SUBSCRIBER_COUNT = 100;
 export const E2E_SEND_RATE = 50;
-export const E2E_PUBLISHER_START_DELAY_SEC = 5;
+export const E2E_PUBLISHER_START_DELAY_SEC = 10;
 export const E2E_RAMP_UP_SEC = 10;
 export const E2E_PLATEAU_SEC = 30;
 export const E2E_RAMP_DOWN_SEC = 5;
-// 발행 종료: t = 5 + 10 + 30 + 5 = 50s → SSE timeout(60s) 이내
+// 발행 종료: t = 10 + 10 + 30 + 5 = 55s → SSE timeout(60s) 이내
