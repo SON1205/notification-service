@@ -63,15 +63,25 @@
       "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
+      "title": "HTTP Request Duration (p95/p99 by URI)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (uri, le))", "legendFormat": "p95 {{uri}}" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[1m])) by (uri, le))", "legendFormat": "p99 {{uri}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
       "title": "━ Polling vs SSE 비교 ━",
       "type": "row",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
       "collapsed": false
     },
     {
       "title": "Polling Request Rate (/notifications?afterId)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 27 },
       "targets": [
         { "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/notifications\"}[1m])) by (status)", "legendFormat": "{{status}}" }
       ]
@@ -79,7 +89,7 @@
     {
       "title": "Polling vs SSE Avg Duration",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 27 },
       "targets": [
         { "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/v1/notifications\"}[1m])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/notifications\"}[1m]))", "legendFormat": "GET /notifications (poll)" },
         { "expr": "sum(rate(http_server_requests_seconds_sum{uri=\"/api/v1/notifications/stream\"}[1m])) / sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/notifications/stream\"}[1m]))", "legendFormat": "GET /stream (SSE)" }
@@ -89,7 +99,7 @@
     {
       "title": "HTTP Error Rate by URI",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 27 },
       "targets": [
         { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..|5..\"}[1m])) by (uri, status)", "legendFormat": "{{uri}} {{status}}" }
       ]
@@ -97,13 +107,13 @@
     {
       "title": "━ 서버 리소스 (원인 분석) ━",
       "type": "row",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 },
       "collapsed": false
     },
     {
       "title": "Executor Threads (Tomcat)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
       "targets": [
         { "expr": "executor_pool_size_threads", "legendFormat": "pool size" },
         { "expr": "executor_active_threads", "legendFormat": "active" },
@@ -114,7 +124,7 @@
     {
       "title": "HikariCP Connections",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
       "targets": [
         { "expr": "hikaricp_connections_active", "legendFormat": "active" },
         { "expr": "hikaricp_connections_idle", "legendFormat": "idle" },
@@ -125,7 +135,7 @@
     {
       "title": "JVM Heap Memory",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 44 },
       "targets": [
         { "expr": "jvm_memory_used_bytes{area=\"heap\"}", "legendFormat": "used {{id}}" },
         { "expr": "jvm_memory_committed_bytes{area=\"heap\"}", "legendFormat": "committed {{id}}" }
@@ -135,7 +145,7 @@
     {
       "title": "JVM GC Pause",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 44 },
       "targets": [
         { "expr": "rate(jvm_gc_pause_seconds_sum[1m])", "legendFormat": "pause time/s" },
         { "expr": "rate(jvm_gc_pause_seconds_count[1m])", "legendFormat": "pause count/s" }
@@ -144,7 +154,7 @@
     {
       "title": "Process Open File Descriptors",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 44 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 52 },
       "targets": [
         { "expr": "process_files_open_files", "legendFormat": "open" },
         { "expr": "process_files_max_files", "legendFormat": "max" }
@@ -153,7 +163,7 @@
     {
       "title": "CPU Usage",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 44 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 52 },
       "targets": [
         { "expr": "process_cpu_usage", "legendFormat": "process" },
         { "expr": "system_cpu_usage", "legendFormat": "system" }
