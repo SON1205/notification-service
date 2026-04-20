@@ -54,7 +54,7 @@ const publishedCount = new Counter('poll_published_count');
 const sendFailed = new Rate('notification_send_failed');
 
 const PUBLISHER_TOTAL_DURATION_SEC = RAMP_UP_SEC + PLATEAU_SEC + RAMP_DOWN_SEC;
-const FLUSH_GRACE_SEC = 1; // publisher 종료 후 마지막 poll 여유
+const FLUSH_GRACE_SEC = 3; // publisher 종료 후 마지막 poll 여유
 
 export const options = {
     setupTimeout: `${Math.max(60, Math.ceil(SUBSCRIBER_COUNT / 5))}s`,
@@ -110,8 +110,23 @@ export function poll(data) {
 
     if (!user || !user.token) return;
 
-    let afterId = 0;
     const headers = authHeaders(user.token);
+
+    // 기존 알림 스킵: 현재 최신 알림 ID를 초기 afterId로 설정
+    let afterId = 0;
+    const initRes = http.get(`${API_PREFIX}/notifications`, {
+        ...headers,
+        tags: { name: 'poll_init' },
+    });
+    if (initRes.status === 200) {
+        try {
+            const existing = JSON.parse(initRes.body);
+            if (existing.length > 0) {
+                afterId = Math.max(...existing.map(n => n.id));
+            }
+        } catch (_) {}
+    }
+
     const startTime = Date.now();
     const warmUpEnd = startTime + PUBLISHER_START_DELAY_SEC * 1000;
     const endTime = startTime + (PUBLISHER_START_DELAY_SEC + PUBLISHER_TOTAL_DURATION_SEC + FLUSH_GRACE_SEC) * 1000;
@@ -148,6 +163,7 @@ export function poll(data) {
                         nonEmptyCount.add(1);
                     }
 
+                    const prevAfterId = afterId;
                     for (const notification of notifications) {
                         // afterId 갱신: 수신한 알림 중 가장 큰 id
                         if (notification.id > afterId) {
@@ -163,10 +179,15 @@ export function poll(data) {
                                     e2eLatency.add(latency);
                                     receivedEvents.add(1);
                                 }
-                            } catch (_) {
-                                // content 파싱 실패 무시
-                            }
+                            } catch (_) {}
                         }
+                    }
+                    // 디버그: VU 1번만 afterId 변화 로그
+                    if (__VU === 1 && afterId !== prevAfterId) {
+                        console.log(`[VU1] afterId: ${prevAfterId} -> ${afterId}, count: ${notifications.length}`);
+                    }
+                    if (__VU === 1 && afterId === prevAfterId && notifications.length > 0) {
+                        console.log(`[VU1] afterId NOT updated! afterId=${afterId}, first.id=${notifications[0].id}, type=${typeof notifications[0].id}, count=${notifications.length}`);
                     }
                 }
             } catch (_) {
