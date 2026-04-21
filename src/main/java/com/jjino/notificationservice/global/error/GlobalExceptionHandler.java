@@ -13,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -65,6 +66,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, getRequestId(), fieldErrors));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    protected ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.warn("TypeMismatchException: parameter={}, value={}", e.getName(), e.getValue());
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, getRequestId()));
     }
 
     // SSE 타임아웃은 정상 동작이므로 예외만 삼키고 로그를 남기지 않는다.

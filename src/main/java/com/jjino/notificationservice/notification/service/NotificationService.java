@@ -70,6 +70,14 @@ public class NotificationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<NotificationInfo> getNotificationsAfter(Long userId, Long afterId) {
+        return notificationRepository.findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, afterId)
+                .stream()
+                .map(NotificationInfo::from)
+                .toList();
+    }
+
     // Last-Event-ID는 브라우저 EventSource가 재연결 시 자동 전송하는 SSE 스펙 핵심 계약.
     // 숫자가 아닌 값(프록시 버그, 임의 요청 등)이면 무시하고 신규 연결로 처리.
     @Transactional(readOnly = true)

@@ -226,6 +226,52 @@ class NotificationServiceTest {
     }
 
     @Nested
+    @DisplayName("getNotificationsAfter")
+    class GetNotificationsAfter {
+
+        @Test
+        @DisplayName("afterId 이후 알림을 반환하고 필드가 올바르게 매핑된다")
+        void returnsNotificationsAfterGivenId() {
+            // given
+            Long userId = 1L;
+            Long afterId = 1L;
+            List<Notification> notifications = List.of(
+                    createNotification(3L, userId, false),
+                    createNotification(2L, userId, false)
+            );
+            given(notificationRepository.findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, afterId))
+                    .willReturn(notifications);
+
+            // when
+            List<NotificationInfo> result = notificationService.getNotificationsAfter(userId, afterId);
+
+            // then
+            assertThat(result).hasSize(2)
+                    .extracting(NotificationInfo::id)
+                    .containsExactly(3L, 2L);
+            assertThat(result).allMatch(info -> info.type() == NotificationType.SYSTEM);
+            then(notificationRepository).should()
+                    .findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, afterId);
+        }
+
+        @Test
+        @DisplayName("afterId 이후 알림이 없으면 빈 리스트를 반환한다")
+        void returnsEmptyListWhenNoNotificationsAfterGivenId() {
+            // given
+            Long userId = 1L;
+            Long afterId = 999L;
+            given(notificationRepository.findByUserIdAndIdGreaterThanOrderByCreatedAtDesc(userId, afterId))
+                    .willReturn(List.of());
+
+            // when
+            List<NotificationInfo> result = notificationService.getNotificationsAfter(userId, afterId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("markAsRead")
     class MarkAsRead {
 

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -53,10 +54,17 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponse>> getAll(@CurrentUserId Long userId) {
+    public ResponseEntity<List<NotificationResponse>> getNotifications(@CurrentUserId Long userId,
+                                                                       @RequestParam(required = false) Long afterId) {
+        List<NotificationInfo> notifications;
+        if (afterId != null) {
+            notifications = notificationService.getNotificationsAfter(userId, afterId);
+        } else {
+            notifications = notificationService.getAll(userId);
+        }
+
         return ResponseEntity.ok(
-                notificationService.getAll(userId)
-                        .stream()
+                notifications.stream()
                         .map(NotificationResponse::from)
                         .toList()
         );

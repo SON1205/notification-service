@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.never;
 import org.mockito.ArgumentCaptor;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -113,12 +114,12 @@ class NotificationControllerTest {
 
     @Nested
     @DisplayName("GET /api/v1/notifications")
-    class GetAllNotifications {
+    class GetNotifications {
 
         @Test
-        @DisplayName("전체 알림 목록을 반환한다")
+        @DisplayName("afterId 없으면 getAll을 호출한다")
         @WithMockUser
-        void returnsAllNotifications() throws Exception {
+        void callsGetAllWithoutAfterId() throws Exception {
             // given
             given(notificationService.getAll(any())).willReturn(
                     List.of(createInfo(1L), createInfo(2L))
@@ -128,6 +129,51 @@ class NotificationControllerTest {
             mockMvc.perform(get("/api/v1/notifications"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2));
+
+            then(notificationService).should().getAll(any());
+            then(notificationService).should(never()).getNotificationsAfter(any(), any());
+        }
+
+        @Test
+        @DisplayName("afterId 있으면 getNotificationsAfter를 호출한다")
+        @WithMockUser
+        void callsGetNotificationsAfterWithAfterId() throws Exception {
+            // given
+            given(notificationService.getNotificationsAfter(any(), eq(5L))).willReturn(
+                    List.of(createInfo(6L), createInfo(7L))
+            );
+
+            // when & then
+            mockMvc.perform(get("/api/v1/notifications").param("afterId", "5"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].id").value(6));
+
+            then(notificationService).should().getNotificationsAfter(any(), eq(5L));
+            then(notificationService).should(never()).getAll(any());
+        }
+
+        @Test
+        @DisplayName("afterId 이후 알림이 없으면 빈 배열을 반환한다")
+        @WithMockUser
+        void returnsEmptyListWhenNoNotificationsAfterGivenId() throws Exception {
+            // given
+            given(notificationService.getNotificationsAfter(any(), eq(999L))).willReturn(
+                    List.of()
+            );
+
+            // when & then
+            mockMvc.perform(get("/api/v1/notifications").param("afterId", "999"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+        }
+
+        @Test
+        @DisplayName("afterId가 숫자가 아니면 400을 반환한다")
+        @WithMockUser
+        void returns400WhenAfterIdIsNotNumeric() throws Exception {
+            mockMvc.perform(get("/api/v1/notifications").param("afterId", "abc"))
+                    .andExpect(status().isBadRequest());
         }
     }
 
